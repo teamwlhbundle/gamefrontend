@@ -1,13 +1,14 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getDailyPlanner,
   submitResult,
   type DailyPlannerItem,
   type SubmitResultPayload,
 } from "@/lib/api";
+import { toast } from "sonner";
 import { formatTimeToAMPM } from "@/lib/formatTime";
 
 const DAILY_PLANNER_QUERY_KEY = "dailyPlanner";
@@ -15,6 +16,16 @@ const DAILY_PLANNER_QUERY_KEY = "dailyPlanner";
 function getTodayIST(): string {
   if (typeof window === "undefined") return "";
   return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+}
+
+function getCurrentTimeIST(): string {
+  if (typeof window === "undefined") return "00:00";
+  return new Date().toLocaleTimeString("en-GB", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }
 
 function getStatusLabel(resultStatus: string): string {
@@ -37,19 +48,31 @@ function getStatusBadgeClass(resultStatus: string): string {
   }
 }
 
-function useCountdown(publishAt: string | undefined) {
+function useCountdown(publishAt: string | undefined, onComplete?: () => void) {
   const [remaining, setRemaining] = useState<string>("");
+  const onCompleteFired = useRef(false);
   useEffect(() => {
     if (!publishAt) {
       setRemaining("");
+      onCompleteFired.current = false;
       return;
     }
+    onCompleteFired.current = false;
+    let backupId: ReturnType<typeof setTimeout> | null = null;
     const target = new Date(publishAt).getTime();
     const tick = () => {
       const now = Date.now();
       const diff = Math.max(0, Math.floor((target - now) / 1000));
       if (diff <= 0) {
         setRemaining("Completed");
+        if (onComplete && !onCompleteFired.current) {
+          onCompleteFired.current = true;
+          onComplete();
+          // Backup refetch after 1s in case first call was missed (e.g. tab throttling)
+          backupId = setTimeout(() => {
+            onComplete();
+          }, 1000);
+        }
         return;
       }
       const h = Math.floor(diff / 3600);
@@ -61,8 +84,11 @@ function useCountdown(publishAt: string | undefined) {
     };
     tick();
     const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [publishAt]);
+    return () => {
+      clearInterval(id);
+      if (backupId !== null) clearTimeout(backupId);
+    };
+  }, [publishAt, onComplete]);
   return remaining;
 }
 
@@ -75,7 +101,6 @@ type ModalState = {
 
 export default function ResultManagerPage() {
   const todayIST = getTodayIST();
-  const queryClient = useQueryClient();
   const [date, setDate] = useState("");
   const [modal, setModal] = useState<ModalState>({
     open: false,
@@ -89,29 +114,49 @@ export default function ResultManagerPage() {
     if (!date && todayIST) setDate(todayIST);
   }, [date, todayIST]);
 
+  const queryClient = useQueryClient();
   const {
     data,
     isLoading: loading,
     error: queryError,
-    refetch,
   } = useQuery({
     queryKey: [DAILY_PLANNER_QUERY_KEY, date],
     queryFn: () => getDailyPlanner(date),
     enabled: !!date,
-    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
 
   const items = data?.items ?? [];
   const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load results") : null;
+  const isToday = date === todayIST;
+
+  const currentRowRef = useRef<HTMLTableRowElement>(null);
+  const currentTimeIST = getCurrentTimeIST();
+  const currentRowIndex = useMemo(() => {
+    if (!isToday || items.length === 0) return -1;
+    const i = items.findIndex((item) => item.resultTime >= currentTimeIST);
+    return i === -1 ? items.length - 1 : i;
+  }, [items, isToday, currentTimeIST]);
+
+  useEffect(() => {
+    if (isToday && items.length > 0 && currentRowIndex >= 0) {
+      const t = setTimeout(() => {
+        currentRowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+      return () => clearTimeout(t);
+    }
+  }, [isToday, items.length, currentRowIndex]);
 
   const submitMutation = useMutation({
     mutationFn: (payload: SubmitResultPayload) => submitResult(payload),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [DAILY_PLANNER_QUERY_KEY, variables.date] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [DAILY_PLANNER_QUERY_KEY, date] });
     },
   });
 
-  const isToday = date === todayIST;
+  const onCountdownComplete = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: [DAILY_PLANNER_QUERY_KEY, date] });
+  }, [queryClient, date]);
 
   const openAdd = useCallback((item: DailyPlannerItem) => {
     setModal({
@@ -140,10 +185,15 @@ export default function ResultManagerPage() {
 
   const handleSubmit = useCallback(async () => {
     if (!modal.item || !date) return;
+    const trimmed = resultInput.trim();
+    if (!/^\d{2}$/.test(trimmed)) {
+      toast.error("Enter only number between 00 to 99");
+      return;
+    }
     const payload: SubmitResultPayload = {
       gameId: modal.item.gameId,
       date,
-      resultNumber: resultInput.trim(),
+      resultNumber: trimmed,
     };
     if (modal.item.resultTime) payload.time = modal.item.resultTime;
     try {
@@ -165,14 +215,6 @@ export default function ResultManagerPage() {
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-semibold text-slate-900">Result Manager</h1>
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => refetch()}
-              disabled={loading}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
-            >
-              Refresh
-            </button>
             <label className="text-sm font-medium text-slate-600">Date</label>
             <input
               type="date"
@@ -224,12 +266,14 @@ export default function ResultManagerPage() {
                 {items.map((item, idx) => (
                   <ResultRow
                     key={`${item.gameId}-${item.resultTime}-${idx}`}
+                    ref={idx === currentRowIndex ? currentRowRef : undefined}
                     item={item}
                     isToday={isToday}
                     date={date}
                     todayIST={todayIST}
                     onAddResult={openAdd}
                     onEditResult={openEdit}
+                    onCountdownComplete={onCountdownComplete}
                   />
                 ))}
               </tbody>
@@ -253,33 +297,38 @@ export default function ResultManagerPage() {
   );
 }
 
-function ResultRow({
-  item,
-  isToday,
-  date,
-  todayIST,
-  onAddResult,
-  onEditResult,
-}: {
-  item: DailyPlannerItem;
-  isToday: boolean;
-  date: string;
-  todayIST: string;
-  onAddResult: (item: DailyPlannerItem) => void;
-  onEditResult: (item: DailyPlannerItem) => void;
-}) {
+const ResultRow = forwardRef<
+  HTMLTableRowElement,
+  {
+    item: DailyPlannerItem;
+    isToday: boolean;
+    date: string;
+    todayIST: string;
+    onAddResult: (item: DailyPlannerItem) => void;
+    onEditResult: (item: DailyPlannerItem) => void;
+    onCountdownComplete?: () => void;
+  }
+>(function ResultRow(
+  { item, isToday, date, todayIST, onAddResult, onEditResult, onCountdownComplete },
+  ref
+) {
   const hasPublishAt = Boolean(item.publishAt);
   const publishAtTime = item.publishAt ? new Date(item.publishAt).getTime() : 0;
   const isSlotTimePast = hasPublishAt && publishAtTime <= Date.now();
   const isPastDate = date < todayIST;
 
-  const showAsCompleted = hasPublishAt && (isPastDate || isSlotTimePast);
+  const isPublished = item.resultStatus === "Publish" || item.resultStatus === "Random Publish";
+  const showAsCompleted =
+    isPublished || (hasPublishAt && (isPastDate || isSlotTimePast));
   const showCountdown =
     isToday &&
     (item.resultStatus === "pending" || item.resultStatus === "Scheduled") &&
     item.publishAt &&
     !isSlotTimePast;
-  const countdown = useCountdown(showCountdown ? item.publishAt : undefined);
+  const countdown = useCountdown(
+    showCountdown ? item.publishAt : undefined,
+    onCountdownComplete
+  );
 
   const action =
     item.resultStatus === "pending"
@@ -289,7 +338,10 @@ function ResultRow({
         : "none";
 
   return (
-    <tr className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
+    <tr
+      ref={ref}
+      className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors"
+    >
       <td className="py-3.5 px-5 font-medium text-slate-900">{item.name}</td>
       <td className="py-3.5 px-5 text-slate-700 tabular-nums">
         {item.resultNumber ?? "—"}
@@ -330,7 +382,7 @@ function ResultRow({
       </td>
     </tr>
   );
-}
+});
 
 function ResultModal({
   item,

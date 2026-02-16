@@ -314,3 +314,81 @@ export async function hardReset(): Promise<{ ok: true; message: string }> {
   }
   return data as { ok: true; message: string };
 }
+
+// --- Public API (no login, for live/results page) ---
+
+export type PublicCurrentResult = {
+  _id?: string;
+  gameId?: { name?: string } | string;
+  gameName: string | null;
+  fullDateTime: string;
+  resultNumber: string;
+  isRandom?: boolean;
+};
+
+export type PublicNextSlot = {
+  nextSlotTime: string;
+  remainingSeconds: number;
+};
+
+export type PublicPastResultItem = {
+  _id?: string;
+  gameId?: { name?: string } | string;
+  gameName: string | null;
+  fullDateTime: string;
+  resultNumber: string;
+  isRandom?: boolean;
+};
+
+export type PublicPastResultsResponse = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  items: PublicPastResultItem[];
+};
+
+/** Latest published result. No auth. */
+export async function getPublicCurrentResult(): Promise<PublicCurrentResult | null> {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/current-result`);
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    const msg = typeof data?.message === "string" ? data.message : "Failed to load current result";
+    throw new Error(msg);
+  }
+  return data as PublicCurrentResult;
+}
+
+/** Next draw slot time and remaining seconds. No auth. */
+export async function getPublicNextSlot(): Promise<PublicNextSlot | null> {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/next-slot`);
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    const msg = typeof data?.message === "string" ? data.message : "Failed to load next slot";
+    throw new Error(msg);
+  }
+  return data as PublicNextSlot;
+}
+
+/** Past results with pagination. No auth. */
+export async function getPublicPastResults(params?: {
+  page?: number;
+  limit?: number;
+}): Promise<PublicPastResultsResponse> {
+  const baseUrl = getBaseUrl();
+  const search = new URLSearchParams();
+  if (params?.page != null) search.set("page", String(params.page));
+  if (params?.limit != null) search.set("limit", String(params.limit));
+  const qs = search.toString();
+  const res = await fetch(`${baseUrl}/api/past-results${qs ? `?${qs}` : ""}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = typeof data?.message === "string" ? data.message : "Failed to load past results";
+    throw new Error(msg);
+  }
+  return data as PublicPastResultsResponse;
+}
