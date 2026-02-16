@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import {
   getDailyPlanner,
@@ -9,7 +10,7 @@ import {
 } from "@/lib/api";
 import { formatTimeToAMPM } from "@/lib/formatTime";
 
-const POLL_INTERVAL_MS = 45 * 1000;
+const DAILY_PLANNER_QUERY_KEY = "dailyPlanner";
 
 function getTodayIST(): string {
   if (typeof window === "undefined") return "";
@@ -74,47 +75,41 @@ type ModalState = {
 
 export default function ResultManagerPage() {
   const todayIST = getTodayIST();
+  const queryClient = useQueryClient();
   const [date, setDate] = useState("");
-  const [items, setItems] = useState<DailyPlannerItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalState>({
     open: false,
     item: null,
     initialValue: "",
     isEdit: false,
   });
-  const [submitLoading, setSubmitLoading] = useState(false);
   const [resultInput, setResultInput] = useState("");
 
-  const fetchResults = useCallback(async (d: string) => {
-    if (!d) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getDailyPlanner(d);
-      setItems(data.items);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load results");
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    if (!date) {
-      setDate(todayIST);
-      return;
-    }
-    fetchResults(date);
-  }, [date, todayIST, fetchResults]);
+    if (!date && todayIST) setDate(todayIST);
+  }, [date, todayIST]);
 
-  useEffect(() => {
-    if (!date) return;
-    const id = setInterval(() => fetchResults(date), POLL_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [date, fetchResults]);
+  const {
+    data,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: [DAILY_PLANNER_QUERY_KEY, date],
+    queryFn: () => getDailyPlanner(date),
+    enabled: !!date,
+    refetchOnWindowFocus: true,
+  });
+
+  const items = data?.items ?? [];
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load results") : null;
+
+  const submitMutation = useMutation({
+    mutationFn: (payload: SubmitResultPayload) => submitResult(payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [DAILY_PLANNER_QUERY_KEY, variables.date] });
+    },
+  });
 
   const isToday = date === todayIST;
 
@@ -151,17 +146,18 @@ export default function ResultManagerPage() {
       resultNumber: resultInput.trim(),
     };
     if (modal.item.resultTime) payload.time = modal.item.resultTime;
-    setSubmitLoading(true);
     try {
-      await submitResult(payload);
+      await submitMutation.mutateAsync(payload);
       closeModal();
-      await fetchResults(date);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to save result");
-    } finally {
-      setSubmitLoading(false);
+      // Error is handled via submitMutation.isError / submitMutation.error in UI if needed
     }
-  }, [modal.item, date, resultInput, closeModal, fetchResults]);
+  }, [modal.item, date, resultInput, closeModal, submitMutation]);
+
+  const submitLoading = submitMutation.isPending;
+  const submitError = submitMutation.isError
+    ? (submitMutation.error instanceof Error ? submitMutation.error.message : "Failed to save result")
+    : null;
 
   return (
     <div className="min-h-screen bg-slate-50/80">
@@ -169,6 +165,14 @@ export default function ResultManagerPage() {
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-semibold text-slate-900">Result Manager</h1>
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => refetch()}
+              disabled={loading}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
+            >
+              Refresh
+            </button>
             <label className="text-sm font-medium text-slate-600">Date</label>
             <input
               type="date"
@@ -179,9 +183,9 @@ export default function ResultManagerPage() {
           </div>
         </div>
 
-        {error && (
+        {(error || submitError) && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            {error}
+            {submitError ?? error}
           </div>
         )}
 

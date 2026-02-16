@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { getCsrfToken } from "@/lib/api";
 
 const getBaseUrl = () =>
@@ -81,6 +82,57 @@ export function CreateGameDrawer({ onClose, onSuccess }: CreateGameDrawerProps) 
       if (!isValidTime(intervalStartTime)) errs.intervalStartTime = "Enter start time (HH:mm)";
       const interval = getEffectiveInterval();
       if (interval == null) errs.interval = "Enter interval between 1 and 1440 minutes";
+    }
+
+    // Past date / past time validation (Interval, Daily, Weekly)
+    if (startDate) {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const [startY, startM, startD] = startDate.split("-").map(Number);
+      const selectedDateOnly = new Date(startY, startM - 1, startD);
+
+    if (selectedDateOnly < todayStart) {
+      errs.startDate = "Past date pe game create nahi ho sakta";
+      toast.error("Past date pe game create nahi ho sakta");
+    } else {
+      const now = new Date();
+      const isToday =
+        selectedDateOnly.getFullYear() === todayStart.getFullYear() &&
+        selectedDateOnly.getMonth() === todayStart.getMonth() &&
+        selectedDateOnly.getDate() === todayStart.getDate();
+
+      // Interval + today: backend will set first slot from creation time; no past-time check needed
+      if (scheduleType === "interval" && !isToday) {
+        const gameStart = new Date(startY, startM - 1, startD, ...intervalStartTime.split(":").map(Number));
+        if (gameStart <= now) {
+          errs.intervalStartTime = "Game ka starting time current time se jyada hona chahiye";
+          toast.error("Game ka starting time current time se jyada hona chahiye");
+        }
+      } else if (scheduleType === "daily" && isToday) {
+        const validTimes = dailyTimes.filter(isValidTime);
+        const hasPastTime = validTimes.some((t) => {
+          const [h, m] = t.split(":").map(Number);
+          return new Date(startY, startM - 1, startD, h, m, 0) <= now;
+        });
+        if (hasPastTime) {
+          errs.dailyTimes = "Game ka starting time current time se jyada hona chahiye";
+          toast.error("Game ka starting time current time se jyada hona chahiye");
+        }
+      } else if (scheduleType === "weekly" && isToday) {
+        const todayDay = WEEKDAYS[new Date().getDay()];
+        if (weeklyDays.includes(todayDay)) {
+          const validTimes = weeklyTimes.filter(isValidTime);
+          const hasPastTime = validTimes.some((t) => {
+            const [h, m] = t.split(":").map(Number);
+            return new Date(startY, startM - 1, startD, h, m, 0) <= now;
+          });
+          if (hasPastTime) {
+            errs.weeklyTimes = "Game ka starting time current time se jyada hona chahiye";
+            toast.error("Game ka starting time current time se jyada hona chahiye");
+          }
+        }
+      }
+    }
     }
 
     if (Object.keys(errs).length > 0) {

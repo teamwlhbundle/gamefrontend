@@ -165,7 +165,7 @@ export async function getUnpublishedScheduledResults(
   if (params?.start) search.set("start", params.start);
   if (params?.end) search.set("end", params.end);
   if (params?.gameId) search.set("gameId", params.gameId);
-  if (params?.futureOnly) search.set("futureOnly", "true");
+  if (params?.futureOnly === true) search.set("futureOnly", "true");
   const qs = search.toString();
   const url = `${baseUrl}/api/admin/scheduled-results/unpublished${qs ? `?${qs}` : ""}`;
   const res = await fetch(url, { credentials: "include" });
@@ -192,6 +192,63 @@ export async function deleteScheduledResult(id: string): Promise<void> {
     const msg = typeof data?.message === "string" ? data.message : "Failed to delete";
     throw new Error(msg);
   }
+}
+
+export type CancelSlotPayload = {
+  gameId: string;
+  date: string;
+  time: string;
+};
+
+/**
+ * Cancel a single future slot (pending or scheduled). Uses admin cookie + CSRF.
+ */
+export async function cancelSlot(payload: CancelSlotPayload): Promise<void> {
+  const baseUrl = getBaseUrl();
+  const csrf = getCsrfToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (csrf) headers["x-csrf-token"] = csrf;
+  const res = await fetch(`${baseUrl}/api/admin/slots/cancel`, {
+    method: "POST",
+    credentials: "include",
+    headers,
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = typeof data?.message === "string" ? data.message : "Failed to cancel slot";
+    throw new Error(msg);
+  }
+}
+
+export type DeleteScheduledResultsByGameResponse = {
+  deletedCount: number;
+  skippedCount: number;
+  cancelledPendingCount: number;
+};
+
+/**
+ * Delete all future unpublished scheduled results for a game (and cancel pending slots). Uses admin cookie + CSRF.
+ */
+export async function deleteScheduledResultsByGame(
+  gameId: string
+): Promise<DeleteScheduledResultsByGameResponse> {
+  const baseUrl = getBaseUrl();
+  const csrf = getCsrfToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (csrf) headers["x-csrf-token"] = csrf;
+  const res = await fetch(`${baseUrl}/api/admin/scheduled-results/bulk-by-game`, {
+    method: "DELETE",
+    credentials: "include",
+    headers,
+    body: JSON.stringify({ gameId }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = typeof data?.message === "string" ? data.message : "Failed to delete by game";
+    throw new Error(msg);
+  }
+  return data as DeleteScheduledResultsByGameResponse;
 }
 
 export async function deleteScheduledResultsBulk(ids: string[]): Promise<{ deletedCount: number; skippedCount: number }> {
@@ -235,67 +292,25 @@ export async function updateScheduledResultsBulk(
   return data as { updatedCount: number; skippedCount: number };
 }
 
-export async function deleteScheduledResultsByGame(
-  gameId: string
-): Promise<{ deletedCount: number; skippedCount: number; cancelledPendingCount?: number }> {
+/**
+ * Hard reset: delete all game data (games, schedules, results, cancelled slots).
+ * Uses admin cookie + CSRF. Call only after frontend double confirmation.
+ */
+export async function hardReset(): Promise<{ ok: true; message: string }> {
   const baseUrl = getBaseUrl();
   const csrf = getCsrfToken();
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (csrf) headers["x-csrf-token"] = csrf;
-  const res = await fetch(`${baseUrl}/api/admin/scheduled-results/bulk-by-game`, {
-    method: "DELETE",
-    credentials: "include",
-    headers,
-    body: JSON.stringify({ gameId }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg = typeof data?.message === "string" ? data.message : "Failed to delete";
-    throw new Error(msg);
-  }
-  return data as { deletedCount: number; skippedCount: number; cancelledPendingCount?: number };
-}
-
-export async function cancelSlot(payload: {
-  gameId: string;
-  date: string;
-  time: string;
-}): Promise<void> {
-  const baseUrl = getBaseUrl();
-  const csrf = getCsrfToken();
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (csrf) headers["x-csrf-token"] = csrf;
-  const res = await fetch(`${baseUrl}/api/admin/slots/cancel`, {
+  const res = await fetch(`${baseUrl}/api/admin/hard-reset`, {
     method: "POST",
     credentials: "include",
     headers,
-    body: JSON.stringify(payload),
+    body: JSON.stringify({}),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const msg = typeof data?.message === "string" ? data.message : "Failed to cancel slot";
+    const msg = typeof data?.message === "string" ? data.message : "Hard reset failed";
     throw new Error(msg);
   }
-}
-
-export async function updateScheduledResultsByGame(
-  gameId: string,
-  resultNumber: string
-): Promise<{ updatedCount: number; skippedCount: number }> {
-  const baseUrl = getBaseUrl();
-  const csrf = getCsrfToken();
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (csrf) headers["x-csrf-token"] = csrf;
-  const res = await fetch(`${baseUrl}/api/admin/scheduled-results/bulk-by-game`, {
-    method: "PATCH",
-    credentials: "include",
-    headers,
-    body: JSON.stringify({ gameId, resultNumber }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg = typeof data?.message === "string" ? data.message : "Failed to update";
-    throw new Error(msg);
-  }
-  return data as { updatedCount: number; skippedCount: number };
+  return data as { ok: true; message: string };
 }
