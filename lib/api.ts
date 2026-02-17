@@ -348,6 +348,11 @@ export type PublicPastResultsResponse = {
   items: PublicPastResultItem[];
 };
 
+export type PublicNowResponse = {
+  timestamp: number;
+  iso: string;
+};
+
 /** Latest published result. No auth. */
 export async function getPublicCurrentResult(): Promise<PublicCurrentResult | null> {
   const baseUrl = getBaseUrl();
@@ -391,4 +396,17 @@ export async function getPublicPastResults(params?: {
     throw new Error(msg);
   }
   return data as PublicPastResultsResponse;
+}
+
+/** Current server time in IST (for live clock). No auth. */
+export async function getPublicNow(): Promise<PublicNowResponse> {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/now`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg =
+      typeof data?.message === "string" ? data.message : "Failed to load server time";
+    throw new Error(msg);
+  }
+  return data as PublicNowResponse;
 }

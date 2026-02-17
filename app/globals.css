@@ -5,18 +5,6 @@
   to { transform: translateX(0); }
 }
 
-/* Lucky draw spinner: multi-rotation then stop */
-@keyframes spinLuckyDraw {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(1800deg); }
-}
-
-/* Single digit wheel: stop at digit 0-9 (--spin-end set inline) */
-@keyframes spinDigitWheel {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(var(--spin-end, 0deg)); }
-}
-
 /* Casino / luck-draw UI */
 @keyframes countdownPulse {
   0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
@@ -57,6 +45,16 @@
   100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }
 
+/* Full-page burst: from top, spread left/right via --end-x (e.g. -30vw to 30vw) */
+@keyframes confettiBurst {
+  0% { transform: translate(0, -15%) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--end-x, 0), 100vh) rotate(720deg); opacity: 0; }
+}
+
+.full-page-confetti-drop {
+  animation: confettiBurst 5s ease-out forwards;
+}
+
 @keyframes screenFlicker {
   0%, 100% { opacity: 1; }
   92% { opacity: 1; }
@@ -73,6 +71,77 @@
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
+}
+
+/* Next game message – cycles through different colours */
+@keyframes nextGameColors {
+  0% {
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.7);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08), 0 0 24px -4px rgba(251, 191, 36, 0.5);
+  }
+  20% {
+    color: #38bdf8;
+    border-color: rgba(56, 189, 248, 0.7);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08), 0 0 24px -4px rgba(56, 189, 248, 0.5);
+  }
+  40% {
+    color: #a78bfa;
+    border-color: rgba(167, 139, 250, 0.7);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08), 0 0 24px -4px rgba(167, 139, 250, 0.5);
+  }
+  60% {
+    color: #34d399;
+    border-color: rgba(52, 211, 153, 0.7);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08), 0 0 24px -4px rgba(52, 211, 153, 0.5);
+  }
+  80% {
+    color: #f472b6;
+    border-color: rgba(244, 114, 182, 0.7);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08), 0 0 24px -4px rgba(244, 114, 182, 0.5);
+  }
+  100% {
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.7);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08), 0 0 24px -4px rgba(251, 191, 36, 0.5);
+  }
+}
+
+.next-game-message {
+  animation: nextGameColors 2.5s ease-in-out infinite;
+}
+
+/* Result number – cycles through different colours */
+@keyframes resultNumberColors {
+  0% {
+    color: #fbbf24 !important;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.7), 0 0 40px rgba(251, 191, 36, 0.4) !important;
+  }
+  20% {
+    color: #38bdf8 !important;
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.7), 0 0 40px rgba(56, 189, 248, 0.4) !important;
+  }
+  40% {
+    color: #a78bfa !important;
+    text-shadow: 0 0 20px rgba(167, 139, 250, 0.7), 0 0 40px rgba(167, 139, 250, 0.4) !important;
+  }
+  60% {
+    color: #34d399 !important;
+    text-shadow: 0 0 20px rgba(52, 211, 153, 0.7), 0 0 40px rgba(52, 211, 153, 0.4) !important;
+  }
+  80% {
+    color: #f472b6 !important;
+    text-shadow: 0 0 20px rgba(244, 114, 182, 0.7), 0 0 40px rgba(244, 114, 182, 0.4) !important;
+  }
+  100% {
+    color: #fbbf24 !important;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.7), 0 0 40px rgba(251, 191, 36, 0.4) !important;
+  }
+}
+
+p.result-number-animate,
+span.result-number-animate {
+  animation: resultNumberColors 2.5s ease-in-out infinite;
 }
 
 /* Page 3D + glowing effect */
