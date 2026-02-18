@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+/* Base responsive: prevent horizontal scroll, allow shrink */
+html {
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+body {
+  min-height: 100dvh;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
 @keyframes slideIn {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
@@ -71,6 +82,27 @@
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
+}
+
+/* Slot machine – marquee lights blink */
+@keyframes slotLightBlink {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  50% { opacity: 0.5; filter: brightness(0.7); }
+}
+
+/* Slot machine – result win pop when reels land */
+@keyframes slotWinPop {
+  0% { transform: scale(1); box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.1), 0 0 25px -2px rgba(59,130,246,0.2); }
+  30% { transform: scale(1.08); box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 0 0 2px rgba(251,191,36,0.4), 0 0 40px 4px rgba(251,191,36,0.5); }
+  100% { transform: scale(1); box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.1), 0 0 25px -2px rgba(59,130,246,0.2); }
+}
+
+.slot-light-blink {
+  animation: slotLightBlink 1.2s ease-in-out infinite;
+}
+
+.slot-result-win-pop {
+  animation: slotWinPop 0.6s ease-out forwards;
 }
 
 /* Next game message – cycles through different colours */

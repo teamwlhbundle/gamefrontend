@@ -28,6 +28,7 @@ export function CreateGameDrawer({ onClose, onSuccess }: CreateGameDrawerProps) 
   const [weeklyDays, setWeeklyDays] = useState<string[]>([]);
   const [weeklyTimes, setWeeklyTimes] = useState<string[]>(["09:00"]);
   const [intervalStartTime, setIntervalStartTime] = useState("09:00");
+  const [intervalEndTime, setIntervalEndTime] = useState("18:00");
   const [intervalMinutes, setIntervalMinutes] = useState<number | "custom">(30);
   const [customInterval, setCustomInterval] = useState("");
   const [loading, setLoading] = useState(false);
@@ -80,6 +81,14 @@ export function CreateGameDrawer({ onClose, onSuccess }: CreateGameDrawerProps) 
     }
     if (scheduleType === "interval") {
       if (!isValidTime(intervalStartTime)) errs.intervalStartTime = "Enter start time (HH:mm)";
+      if (!isValidTime(intervalEndTime)) errs.intervalEndTime = "Enter end time (HH:mm)";
+      if (isValidTime(intervalStartTime) && isValidTime(intervalEndTime)) {
+        const [sh, sm] = intervalStartTime.split(":").map(Number);
+        const [eh, em] = intervalEndTime.split(":").map(Number);
+        const startM = sh * 60 + sm;
+        const endM = eh * 60 + em;
+        if (startM >= endM) errs.intervalEndTime = "End time start time se baad hona chahiye";
+      }
       const interval = getEffectiveInterval();
       if (interval == null) errs.interval = "Enter interval between 1 and 1440 minutes";
     }
@@ -162,6 +171,7 @@ export function CreateGameDrawer({ onClose, onSuccess }: CreateGameDrawerProps) 
         body.resultTimes = weeklyTimes.filter(isValidTime);
       } else {
         body.resultTime = intervalStartTime;
+        body.slotEndTime = intervalEndTime;
         body.slotIntervalMinutes = getEffectiveInterval() ?? 30;
       }
 
@@ -425,6 +435,19 @@ export function CreateGameDrawer({ onClose, onSuccess }: CreateGameDrawerProps) 
                   />
                   {fieldErrors.intervalStartTime && (
                     <p className="mt-1 text-sm text-red-600">{fieldErrors.intervalStartTime}</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600 mb-2">End time</p>
+                  <input
+                    type="time"
+                    value={intervalEndTime}
+                    onChange={(e) => setIntervalEndTime(e.target.value)}
+                    disabled={loading}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-slate-900"
+                  />
+                  {fieldErrors.intervalEndTime && (
+                    <p className="mt-1 text-sm text-red-600">{fieldErrors.intervalEndTime}</p>
                   )}
                 </div>
                 <div>

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -6,6 +6,13 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Game Frontend",
   description: "Game frontend",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
 };
 
 export default function RootLayout({

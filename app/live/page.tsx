@@ -243,7 +243,7 @@ export default function LivePage() {
   });
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-slate-900 text-white">
+    <main className="relative min-h-screen min-h-dvh w-full max-w-full overflow-x-hidden bg-slate-900 text-white">
       {showPartyPopper && <FullPagePartyPopper />}
 
       <TopSection
@@ -435,6 +435,14 @@ function TopSection({
                 </span>
               </p>
             )}
+            <p className="mt-2 text-center">
+              <Link
+                href="/live/slot"
+                className="text-sm font-medium text-amber-400 underline underline-offset-2 hover:text-amber-300"
+              >
+                Slot style view (vertical ticker)
+              </Link>
+            </p>
           </>
         )}
       </section>
