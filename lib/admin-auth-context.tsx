@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { checkAdminSessionCookie } from "@/lib/api";
+import { checkAdminSessionCookie, adminLogout } from "@/lib/api";
 import { clearAdminToken } from "@/lib/auth";
 
 type AdminAuthState = {
@@ -24,7 +24,12 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await adminLogout();
+    } catch {
+      /* ignore */
+    }
     clearAdminToken();
     if (typeof sessionStorage !== "undefined") sessionStorage.removeItem("csrf_token");
     setIsAuthenticated(false);

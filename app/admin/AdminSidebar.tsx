@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useCallback } from "react";
 import { hardReset } from "@/lib/api";
+import { useAdminAuth } from "@/lib/admin-auth-context";
 
 function CreateGameIcon({ className }: { className?: string }) {
   return (
@@ -50,6 +51,14 @@ function HardResetIcon({ className }: { className?: string }) {
   );
 }
 
+function LogoutIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+    </svg>
+  );
+}
+
 function generateSixDigit(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
@@ -64,6 +73,7 @@ function generateEightAlphanumeric(): string {
 export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const { logout } = useAdminAuth();
   const [showHardResetModal, setShowHardResetModal] = useState(false);
   const [hardResetStep, setHardResetStep] = useState<1 | 2>(1);
   const [sixDigit, setSixDigit] = useState("");
@@ -175,6 +185,14 @@ export function AdminSidebar() {
         >
           <HardResetIcon className="w-5 h-5 shrink-0" />
           {!collapsed && <span className="truncate">Hard Reset</span>}
+        </button>
+        <button
+          type="button"
+          onClick={() => logout()}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-700/60 hover:text-white transition-colors w-full mt-2"
+        >
+          <LogoutIcon className="w-5 h-5 shrink-0" />
+          {!collapsed && <span className="truncate">Logout</span>}
         </button>
       </nav>
 

@@ -42,6 +42,25 @@ export async function login(email: string, password: string): Promise<string> {
  * Verify admin session using HTTP-only cookie (credentials: 'include').
  * Used for route protection when using cookie-based auth.
  */
+/**
+ * Admin logout: clears cookies on backend. Call before clearing local state.
+ */
+export async function adminLogout(): Promise<void> {
+  const baseUrl = getBaseUrl();
+  const csrf = getCsrfToken();
+  const headers: Record<string, string> = {};
+  if (csrf) headers["x-csrf-token"] = csrf;
+  try {
+    await fetch(`${baseUrl}/api/admin/logout`, {
+      method: "POST",
+      credentials: "include",
+      headers,
+    });
+  } catch {
+    // Ignore network errors; we still clear local state
+  }
+}
+
 export async function checkAdminSessionCookie(): Promise<boolean> {
   const baseUrl = getBaseUrl();
   try {
