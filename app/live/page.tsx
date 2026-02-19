@@ -682,10 +682,16 @@ function LuckyDrawSpinner({
   const resultNumber = result?.resultNumber ?? "";
   const digit1 = resultNumber.length >= 1 ? resultNumber[0] : "—";
   const digit2 = resultNumber.length >= 2 ? resultNumber[1] : "—";
-  const gameName =
-    typeof result?.gameName === "string"
-      ? result.gameName
-      : result?.gameId?.name ?? "Lucky Draw";
+  // Safely derive game name from either result.gameName (string) or result.gameId.name (object)
+  let gameName: string = "Lucky Draw";
+  if (typeof result?.gameName === "string") {
+    gameName = result.gameName;
+  } else if (result?.gameId && typeof result.gameId === "object" && "name" in result.gameId) {
+    const maybeName = (result.gameId as { name?: string }).name;
+    if (typeof maybeName === "string") {
+      gameName = maybeName;
+    }
+  }
 
   const middleBoxResult = resultNumber || "—";
 
@@ -841,10 +847,15 @@ function WinningNumberCard({
     );
   }
 
-  const gameName =
-    typeof result.gameName === "string"
-      ? result.gameName
-      : result.gameId?.name ?? "—";
+  let gameName: string = "—";
+  if (typeof result.gameName === "string") {
+    gameName = result.gameName;
+  } else if (result.gameId && typeof result.gameId === "object" && "name" in result.gameId) {
+    const maybeName = (result.gameId as { name?: string }).name;
+    if (typeof maybeName === "string") {
+      gameName = maybeName;
+    }
+  }
 
   return (
     <div
