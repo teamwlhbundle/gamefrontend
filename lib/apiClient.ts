@@ -1,13 +1,14 @@
 import axios, { type AxiosError } from "axios";
 
 /**
- * API base URL. In the browser we use "" so requests go to same origin and Next.js
- * rewrites /api/* to the backend (no CORS). On the server we use NEXT_PUBLIC_API_URL.
+ * API base URL.
+ * - When NEXT_PUBLIC_API_URL is set (e.g. in production or local dev), use it so the
+ *   client talks directly to the backend (CORS is handled by the server).
+ * - When not set, fall back to "" so requests go to the same origin (useful only if a
+ *   reverse proxy is configured in front of the frontend).
  */
 export const getBaseUrl = (): string =>
-  typeof window !== "undefined"
-    ? ""
-    : (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) || "";
+  (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) || "";
 
 /**
  * Read CSRF token from sessionStorage or cookie. Backend returns it in login response.
