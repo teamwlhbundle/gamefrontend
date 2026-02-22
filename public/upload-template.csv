@@ -1,4 +1,4 @@
-fullDateTime,resultNumber,gameId,gameName
-2024-02-22T14:30:00Z,08,641e2fabc1234567890abcd,Lucky Draw
-2024-02-23T10:00:00Z,17,,Lucky Draw
-
+fullDateTime,resultNumber,gameName
+2024-02-22T14:30:00+05:30,08,Lucky Draw
+2024-02-23T10:00:00+05:30,17,Lucky Draw
+2024-02-24T18:45:00+05:30,05,Lucky Draw

@@ -687,15 +687,15 @@ function FullPagePartyPopper() {
 function OrangeBarItem({ label, value }: { label: string; value: string }) {
   return (
     <div
-      className="rounded-lg border border-slate-600/50 bg-slate-800/80 px-1.5 py-1.5 text-center sm:px-3 sm:py-2.5 md:px-4 md:py-2.5 live-card-3d"
+      className="flex flex-col items-center justify-center rounded-lg border border-slate-600/50 bg-slate-800/80 px-1.5 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 live-card-3d min-h-[48px] sm:min-h-[56px] md:min-h-[64px]"
       style={{
         boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)",
       }}
     >
-      <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 sm:text-[10px] md:text-xs">
+            <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 sm:text-[10px] md:text-xs text-center">
         {label}
       </p>
-      <p className="mt-0.5 font-mono text-xs font-bold tabular-nums text-white sm:text-sm md:text-base">
+      <p className="mt-0.5 font-mono text-xs font-bold tabular-nums text-white sm:text-sm md:text-base text-center">
         {value}
       </p>
     </div>
@@ -811,6 +811,9 @@ export default function LiveSlotPage() {
         limit: 50,
         ...(fromDate && toDate ? { fromDate, toDate } : {}),
       }),
+    // Poll past results in background so UI shows recent uploads without reloading.
+    // Keeps the refresh scoped to this query only for a smooth UX.
+    refetchInterval: 30000,
   });
 
   return (
@@ -845,36 +848,36 @@ export default function LiveSlotPage() {
               />
               <OrangeBarItem label="Today Date" value={todayIST} />
               <OrangeBarItem label="Now Time" value={istClock || "—"} />
-              <div
-                className="rounded-lg border border-slate-600/50 bg-slate-800/80 px-1.5 py-1.5 text-center sm:px-3 sm:py-2.5 md:px-4 md:py-2.5 live-card-3d"
-                style={{
-                  boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)",
-                }}
-              >
-                <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 sm:text-[10px] md:text-xs">
-                  Time to Draw
-                </p>
-                {showNextGameMessage ? (
-                  <p className="next-game-message mt-0.5 text-xs font-bold uppercase tracking-wider text-amber-400 sm:text-sm md:text-base">
-                    Next game
-                  </p>
-                ) : (
-                  <p className="mt-0.5 font-mono text-xs font-bold tabular-nums text-white sm:text-sm md:text-base">
-                    {countdownDisplay ?? "—"}
-                  </p>
-                )}
-              </div>
+          <div
+            className="flex flex-col items-center justify-center rounded-lg border border-slate-600/50 bg-slate-800/80 px-1.5 py-1.5 sm:px-3 sm:py-2.5 md:px-4 md:py-2.5 live-card-3d"
+            style={{
+              boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)",
+            }}
+          >
+            <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 sm:text-[10px] md:text-xs text-center">
+              Time to Draw
+            </p>
+            {showNextGameMessage ? (
+              <p className="next-game-message mt-0.5 text-xs font-bold uppercase tracking-wider text-amber-400 sm:text-sm md:text-base text-center">
+                Next game
+              </p>
+            ) : (
+              <p className="mt-0.5 font-mono text-xs font-bold tabular-nums text-white sm:text-sm md:text-base text-center">
+                {countdownDisplay ?? "—"}
+              </p>
+            )}
+          </div>
             </div>
           </div>
 
           {/* Desktop/Large: single row with 5 columns (logo + 4 boxes) */}
-          <div className="hidden lg:grid w-full grid-cols-5 gap-1.5 px-10 py-5">
+          <div className="hidden lg:grid w-full grid-cols-5 gap-1.5 px-6 py-4">
             <div
-              className="mt-[3px] rounded-lg border border-slate-600/50 bg-slate-800/80 p-0 live-card-3d overflow-hidden h-24 xl:h-28"
+              className="mt-[3px] rounded-lg border border-slate-600/50 bg-gradient-to-b from-slate-900 to-slate-800 p-0 live-card-3d overflow-hidden h-24 xl:h-28"
               style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)" }}
             >
-              <div className="relative w-full h-full p-0">
-                <Image src="/pl365-logo.png" alt="Pl365" fill className="object-cover" priority />
+              <div className="relative w-full h-full p-3 flex items-center justify-center">
+                <Image src="/pl365-logo.png" alt="Pl365" fill className="object-contain" priority />
               </div>
             </div>
             <OrangeBarItem
@@ -884,20 +887,20 @@ export default function LiveSlotPage() {
             <OrangeBarItem label="Today Date" value={todayIST} />
             <OrangeBarItem label="Now Time" value={istClock || "—"} />
             <div
-              className="rounded-lg border border-slate-600/50 bg-slate-800/80 px-1.5 py-1.5 text-center sm:px-3 sm:py-2.5 md:px-4 md:py-2.5 live-card-3d"
+              className="flex flex-col items-center justify-center rounded-lg border border-slate-600/50 bg-slate-800/80 px-1.5 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 live-card-3d min-h-[48px] sm:min-h-[56px] md:min-h-[64px]"
               style={{
                 boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)",
               }}
             >
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 sm:text-[10px] md:text-xs">
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 sm:text-[10px] md:text-xs text-center">
                 Time to Draw
               </p>
               {showNextGameMessage ? (
-                <p className="next-game-message mt-0.5 text-xs font-bold uppercase tracking-wider text-amber-400 sm:text-sm md:text-base">
+                <p className="next-game-message mt-0.5 text-xs font-bold uppercase tracking-wider text-amber-400 sm:text-sm md:text-base text-center">
                   Next game
                 </p>
               ) : (
-                <p className="mt-0.5 font-mono text-xs font-bold tabular-nums text-white sm:text-sm md:text-base">
+                <p className="mt-0.5 font-mono text-xs font-bold tabular-nums text-white sm:text-sm md:text-base text-center">
                   {countdownDisplay ?? "—"}
                 </p>
               )}

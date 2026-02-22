@@ -1,4 +1,4 @@
-\"use client\";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,7 @@ export default function UploadOldResultsPage() {
   const [dryRun, setDryRun] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [errorsList, setErrorsList] = useState<Array<any>>([]);
 
   if (!isLoading && !isAuthenticated) {
     router.push("/admin/login");
@@ -43,6 +44,7 @@ export default function UploadOldResultsPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.message || "Upload failed");
       setMessage(`Done. processed=${data.processed}, errors=${data.errors?.length || 0}, dryRun=${data.dryRun}`);
+      setErrorsList(Array.isArray(data.errors) ? data.errors.slice(0, 200) : []); // keep first 200 examples
     } catch (e: any) {
       setMessage(`Error: ${e?.message || String(e)}`);
     } finally {
@@ -92,6 +94,19 @@ export default function UploadOldResultsPage() {
       </div>
 
       {message && <div className="mt-4 p-3 bg-slate-800/60 rounded text-sm">{message}</div>}
+      {errorsList.length > 0 && (
+        <div className="mt-4 p-3 bg-red-900/60 rounded text-sm">
+          <strong>Sample errors (showing up to 200):</strong>
+          <ul className="mt-2 list-inside list-decimal max-h-80 overflow-auto">
+            {errorsList.map((err, i) => (
+              <li key={i} className="mb-1">
+                <div className="font-semibold">{err.reason || 'error'}</div>
+                <div className="text-xs text-slate-200 break-words">{`line ${err.line || '?'} — ${err.raw || ''}`}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <p className="mt-4 text-xs text-slate-500">Endpoint: {process.env.NEXT_PUBLIC_API_URL || ""}/api/admin/upload-old-results</p>
     </div>
   );
