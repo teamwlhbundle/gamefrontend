@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/lib/admin-auth-context";
+import { apiClient } from "@/lib/apiClient";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -16,11 +17,6 @@ function validatePassword(value: string): string | null {
   if (!value) return "Password is required";
   return null;
 }
-
-const getBaseUrl = () =>
-  typeof window !== "undefined"
-    ? process.env.NEXT_PUBLIC_API_URL || ""
-    : process.env.NEXT_PUBLIC_API_URL || "";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -52,21 +48,10 @@ export default function AdminLoginPage() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${getBaseUrl()}/api/admin/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      const message =
-        typeof data?.message === "string" ? data.message : "Login failed";
-
-      if (!res.ok) {
-        setError(message);
-        return;
-      }
+      const { data } = await apiClient.post<{ csrfToken?: string; message?: string }>(
+        "/api/admin/login",
+        { email: email.trim(), password }
+      );
 
       const csrfToken = typeof data?.csrfToken === "string" ? data.csrfToken : null;
       if (csrfToken && typeof sessionStorage !== "undefined") {
@@ -75,8 +60,9 @@ export default function AdminLoginPage() {
 
       setAuthenticated();
       router.push("/admin/dashboard");
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setError(message);
     } finally {
       setLoading(false);
     }
