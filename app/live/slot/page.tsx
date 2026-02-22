@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -822,31 +824,84 @@ export default function LiveSlotPage() {
             "0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05), 0 0 30px -5px rgba(59,130,246,0.12)",
         }}
       >
-        <div className="grid w-full grid-cols-2 gap-1.5 px-2 py-2.5 sm:grid-cols-4 sm:gap-4 sm:px-6 sm:py-4 md:gap-5 md:px-8 lg:px-10 lg:py-5">
-          <OrangeBarItem
-            label="Next Draw Time"
-            value={nextSlot ? formatNextSlotTime(nextSlot.nextSlotTime) : "—"}
-          />
-          <OrangeBarItem label="Today Date" value={todayIST} />
-          <OrangeBarItem label="Now Time" value={istClock || "—"} />
-          <div
-            className="rounded-lg border border-slate-600/50 bg-slate-800/80 px-1.5 py-1.5 text-center sm:px-3 sm:py-2.5 md:px-4 md:py-2.5 live-card-3d"
-            style={{
-              boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)",
-            }}
-          >
-            <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 sm:text-[10px] md:text-xs">
-              Time to Draw
-            </p>
-            {showNextGameMessage ? (
-              <p className="next-game-message mt-0.5 text-xs font-bold uppercase tracking-wider text-amber-400 sm:text-sm md:text-base">
-                Next game
+        <div className="w-full">
+          {/* Mobile & Tablet: logo row (full width) + 2x2 grid for the four info boxes */}
+          <div className="lg:hidden">
+            <div className="px-2 sm:px-6 md:px-8">
+              <div
+                className="mt-[3px] rounded-lg border border-slate-600/50 bg-slate-800/80 p-0 live-card-3d overflow-hidden h-20 sm:h-24 md:h-28"
+                style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)" }}
+              >
+                <div className="relative w-full h-full p-0">
+                  <Image src="/pl365-logo.png" alt="Pl365" fill className="object-cover" priority />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5 px-2 py-2.5 sm:gap-4 sm:px-6 md:gap-5 md:px-8">
+              <OrangeBarItem
+                label="Next Draw Time"
+                value={nextSlot ? formatNextSlotTime(nextSlot.nextSlotTime) : "—"}
+              />
+              <OrangeBarItem label="Today Date" value={todayIST} />
+              <OrangeBarItem label="Now Time" value={istClock || "—"} />
+              <div
+                className="rounded-lg border border-slate-600/50 bg-slate-800/80 px-1.5 py-1.5 text-center sm:px-3 sm:py-2.5 md:px-4 md:py-2.5 live-card-3d"
+                style={{
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)",
+                }}
+              >
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 sm:text-[10px] md:text-xs">
+                  Time to Draw
+                </p>
+                {showNextGameMessage ? (
+                  <p className="next-game-message mt-0.5 text-xs font-bold uppercase tracking-wider text-amber-400 sm:text-sm md:text-base">
+                    Next game
+                  </p>
+                ) : (
+                  <p className="mt-0.5 font-mono text-xs font-bold tabular-nums text-white sm:text-sm md:text-base">
+                    {countdownDisplay ?? "—"}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop/Large: single row with 5 columns (logo + 4 boxes) */}
+          <div className="hidden lg:grid w-full grid-cols-5 gap-1.5 px-10 py-5">
+            <div
+              className="mt-[3px] rounded-lg border border-slate-600/50 bg-slate-800/80 p-0 live-card-3d overflow-hidden h-24 xl:h-28"
+              style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)" }}
+            >
+              <div className="relative w-full h-full p-0">
+                <Image src="/pl365-logo.png" alt="Pl365" fill className="object-cover" priority />
+              </div>
+            </div>
+            <OrangeBarItem
+              label="Next Draw Time"
+              value={nextSlot ? formatNextSlotTime(nextSlot.nextSlotTime) : "—"}
+            />
+            <OrangeBarItem label="Today Date" value={todayIST} />
+            <OrangeBarItem label="Now Time" value={istClock || "—"} />
+            <div
+              className="rounded-lg border border-slate-600/50 bg-slate-800/80 px-1.5 py-1.5 text-center sm:px-3 sm:py-2.5 md:px-4 md:py-2.5 live-card-3d"
+              style={{
+                boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)",
+              }}
+            >
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 sm:text-[10px] md:text-xs">
+                Time to Draw
               </p>
-            ) : (
-              <p className="mt-0.5 font-mono text-xs font-bold tabular-nums text-white sm:text-sm md:text-base">
-                {countdownDisplay ?? "—"}
-              </p>
-            )}
+              {showNextGameMessage ? (
+                <p className="next-game-message mt-0.5 text-xs font-bold uppercase tracking-wider text-amber-400 sm:text-sm md:text-base">
+                  Next game
+                </p>
+              ) : (
+                <p className="mt-0.5 font-mono text-xs font-bold tabular-nums text-white sm:text-sm md:text-base">
+                  {countdownDisplay ?? "—"}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </section>

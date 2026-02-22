@@ -134,7 +134,8 @@ export function AdminSidebar() {
   const navItems = [
     { href: "/admin/games/create", label: "Create Game", icon: CreateGameIcon },
     { href: "/admin/game-manager", label: "Game Manager", icon: GameManagerIcon },
-    { href: "/admin/results", label: "Result Manager", icon: ResultManagerIcon },
+  { href: "/admin/results", label: "Result Manager", icon: ResultManagerIcon },
+  { href: "/admin/upload-old-results", label: "Upload Old Results", icon: ResultManagerIcon },
   ];
 
   return (
