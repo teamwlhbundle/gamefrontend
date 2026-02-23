@@ -831,12 +831,9 @@ export default function LiveSlotPage() {
           {/* Mobile & Tablet: logo row (full width) + 2x2 grid for the four info boxes */}
           <div className="lg:hidden">
             <div className="px-2 sm:px-6 md:px-8">
-              <div
-                className="mt-[3px] rounded-lg border border-slate-600/50 bg-slate-800/80 p-0 live-card-3d overflow-hidden h-20 sm:h-24 md:h-28"
-                style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)" }}
-              >
-                <div className="relative w-full h-full p-0">
-                  <Image src="/pl365-logo.png" alt="Pl365" fill className="object-cover" priority />
+              <div className="mt-[3px] bg-transparent p-0 overflow-hidden h-20 sm:h-24 md:h-28">
+                <div className="relative w-full h-full p-0 flex items-center justify-center">
+                  <Image src="/pl365-logo.png" alt="Pl365" fill className="object-contain" priority />
                 </div>
               </div>
             </div>
@@ -872,10 +869,7 @@ export default function LiveSlotPage() {
 
           {/* Desktop/Large: single row with 5 columns (logo + 4 boxes) */}
           <div className="hidden lg:grid w-full grid-cols-5 gap-1.5 px-6 py-4">
-            <div
-              className="mt-[3px] rounded-lg border border-slate-600/50 bg-gradient-to-b from-slate-900 to-slate-800 p-0 live-card-3d overflow-hidden h-24 xl:h-28"
-              style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)" }}
-            >
+            <div className="mt-[3px] bg-transparent p-0 overflow-hidden h-24 xl:h-28">
               <div className="relative w-full h-full p-3 flex items-center justify-center">
                 <Image src="/pl365-logo.png" alt="Pl365" fill className="object-contain" priority />
               </div>
