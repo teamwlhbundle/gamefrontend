@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.21",
+    "@tailwindcss/postcss": "^4.2.0",
+    "tailwindcss": "^4.2.0",
     "autoprefixer": "^10.4.14",
     "axios": "^1.13.5",
     "next": "16.1.6",
@@ -19,14 +21,11 @@
     "sonner": "^2.0.7"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "autoprefixer": "^10.4.14",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "tailwindcss": "^4.2.0",
     "typescript": "^5"
   }
 }
