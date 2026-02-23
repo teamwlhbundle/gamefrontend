@@ -5,8 +5,8 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Game Frontend",
-  description: "Game frontend",
+  title: "Play Lottery 365",
+  description: "Play Lottery 365",
 };
 
 export const viewport: Viewport = {

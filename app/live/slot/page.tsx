@@ -800,14 +800,15 @@ export default function LiveSlotPage() {
   const digitHeightPx = useSlotReelSize();
 
   const [singleDate, setSingleDate] = useState<string>(() => getTodayISTYYYYMMDD());
+  const [page, setPage] = useState(1);
   const fromDate = singleDate || undefined;
   const toDate = singleDate || undefined;
 
   const { data: pastData } = useQuery({
-    queryKey: ["public", "past-results", 1, fromDate, toDate],
+    queryKey: ["public", "past-results", page, fromDate, toDate],
     queryFn: () =>
       getPublicPastResults({
-        page: 1,
+        page,
         limit: 50,
         ...(fromDate && toDate ? { fromDate, toDate } : {}),
       }),
@@ -946,7 +947,10 @@ export default function LiveSlotPage() {
                 <input
                   type="date"
                   value={singleDate}
-                  onChange={(e) => setSingleDate(e.target.value)}
+                  onChange={(e) => {
+                    setSingleDate(e.target.value);
+                    setPage(1);
+                  }}
                   className="live-date-input w-full min-w-[120px] sm:min-w-[140px] sm:w-auto"
                 />
               </label>
@@ -981,6 +985,30 @@ export default function LiveSlotPage() {
             <p className="w-full rounded-xl border border-slate-700/50 bg-slate-800/40 py-6 text-center text-sm text-slate-500 live-card-3d" style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)" }}>
               No past results yet.
             </p>
+          )}
+
+          {pastData?.totalPages != null && pastData.totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-center gap-3 sm:mt-8 sm:gap-4 md:mt-10">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="rounded-lg border border-slate-600/50 bg-slate-800/80 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-200 transition-colors hover:bg-slate-700 disabled:opacity-50 disabled:hover:bg-slate-800/80 sm:px-6 sm:py-2.5 sm:text-xs live-card-3d"
+                style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)" }}
+              >
+                Previous
+              </button>
+              <span className="font-mono text-xs font-medium tracking-wide text-slate-400 sm:text-sm">
+                Page {page} of {pastData.totalPages}
+              </span>
+              <button
+                disabled={page >= pastData.totalPages}
+                onClick={() => setPage((p) => Math.min(pastData.totalPages, p + 1))}
+                className="rounded-lg border border-slate-600/50 bg-slate-800/80 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-200 transition-colors hover:bg-slate-700 disabled:opacity-50 disabled:hover:bg-slate-800/80 sm:px-6 sm:py-2.5 sm:text-xs live-card-3d"
+                style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)" }}
+              >
+                Next
+              </button>
+            </div>
           )}
         </div>
       </section>
