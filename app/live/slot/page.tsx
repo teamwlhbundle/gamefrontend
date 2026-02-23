@@ -809,7 +809,7 @@ export default function LiveSlotPage() {
     queryFn: () =>
       getPublicPastResults({
         page,
-        limit: 50,
+        limit: 20,
         ...(fromDate && toDate ? { fromDate, toDate } : {}),
       }),
     // Poll past results in background so UI shows recent uploads without reloading.
